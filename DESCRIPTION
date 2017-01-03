@@ -1,0 +1,27 @@
+Package: PKAEvis
+Type: Package
+Title: Visualize longitudinal adverse event data with pharmacokinetic profiles
+Version: 0.1.1
+Author: Kenta Yoshida
+Maintainer: Kenta Yoshida <yoshida.kenta@gene.com>
+Description: The PKAEvis package provide visualization tools to explore 
+    relationships between adverse event (AE) occurance/duration and drug 
+    exposures in individuals. Currently this package provide one functionality:
+    to overlay duration of AE on the individual concentration-time profiles. 
+Depends:
+    R (>= 3.1)
+Imports:
+    magrittr,
+    dplyr,
+    tidyr,
+    ggplot2 (>= 2.1),
+    cowplot
+License: MIT | file LICENSE
+Encoding: UTF-8
+LazyData: true
+Suggests:
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 5.0.1

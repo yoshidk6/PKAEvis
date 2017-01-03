@@ -1,0 +1,27 @@
+
+
+Correct orders of lines when overlayed
+- Maybe manually draw AE lines for each category?
+-- This also allows to change PK curve color with dose (not possible to have two color scales in ggplot2)
+
+Create `clean.AE.days` function?
+- Overwrite lower AE grades with upper AE grade
+- Clean sometimes untidy AE data
+
+Censoring for PK plot (especially for placebo group)
+
+Create example AE data (not manually written table file)
+
+
+
+#### Not urgent ####
+
+Introduce Plotly
+
+Remove MDV==1 records
+- Use exist function
+- http://stackoverflow.com/questions/28276559/r-can-exists-function-be-used-within-mutate-dplyr-package
+
+
+#### Probably not going to work on ####
+

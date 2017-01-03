@@ -1,0 +1,212 @@
+---
+title: "Introduction to PKAEvis"
+author: "Kenta Yoshida"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+vignette: >
+  %\VignetteIndexEntry{Introduction to PKAEvis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+The `PKAEvis` package provide visualization tools to explore relationships between adverse event (AE) occurance/duration and drug exposures in individuals. Currently this package provide one functionality: to overlay duration of AE on the individual concentration-time profiles. 
+
+
+
+## AE overlay on concentration-time profiles
+
+There are two steps in creating the figures:
+
+- Create a list of figures for active arm, placebo arm, and legend
+- Combine these figures into single plot object
+
+Having two steps in the process allows users to have more control over figure appearances by using `ggplot2` functions.
+
+Here is an example using the appended sample datasets: 
+```{r, fig.height = 5, fig.width = 6, message=FALSE, warning=FALSE}
+require(PKAEvis)
+
+glist <-
+  pkaeplot(pk  = pk.sim.profile,
+           ae  = ae.sim.profile,
+           subj= subject.sim,
+           ae.data.first.day = 1,
+           ae.col.var="AEGR")
+combine_pkaeplot(glist)
+```
+
+The top figure is for subjects with PK data and the bottom is for subjects without PK data. Lines represent duration and circles represent onset and resolution of AEs.  
+
+
+Using pipe operator `%>%`, the code can be simplified to:
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
+pkaeplot(pk  = pk.sim.profile,
+         ae  = ae.sim.profile,
+         subj= subject.sim,
+         ae.data.first.day = 1,
+         ae.col.var="AEGR") %>% 
+  combine_pkaeplot()
+```
+
+
+## Figure arrangements
+
+Arrangements of multiple figures in the final plot is managed by `combine_pkaeplot`.
+
+### Size of subplots
+Relative heights or widths of subplots can be controlled with `rel_heights` and `rel_widths` in `combine_pkaeplot`. For example, you can use the same heights of subplots for active and placebo arm:
+```{r, fig.height = 5, fig.width = 6, message=FALSE, warning=FALSE}
+pkaeplot(pk  = pk.sim.profile,
+         ae  = ae.sim.profile,
+         subj= subject.sim,
+         ae.data.first.day = 1,
+         ae.col.var="AEGR") %>% 
+  combine_pkaeplot(rel_heights=c(1,1))
+```
+
+
+### Remove legend
+You can remove legend with the parameter `legend` in `combine_pkaeplot`:
+
+```{r, fig.height = 5, fig.width = 6, message=FALSE, warning=FALSE}
+pkaeplot(pk  = pk.sim.profile,
+         ae  = ae.sim.profile,
+         subj= subject.sim,
+         ae.data.first.day = 1,
+         ae.col.var="AEGR") %>% 
+  combine_pkaeplot(legend=F)
+```
+
+### Custom options
+A code for `combine_pkaeplot` is very simple (thanks to `cowplot` package), and you can write your own function if you need more flexibility. Please refer to `cowplot` package for details of arranging plots in a grid.  
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
+combine_pkaeplot <- function(glist,rel_heights=c(3,1),rel_widths=c(9,1),legend=TRUE){
+  
+  glist[[1]] <- glist[[1]] +
+    ggplot2::theme(axis.title.x = ggplot2::element_blank(),
+                   axis.text.x  = ggplot2::element_blank())
+  glist[[2]] <- glist[[2]] +
+    ggplot2::theme(axis.title.y = ggplot2::lement_blank(),
+                   axis.text.y  = ggplot2::element_blank(),
+                   axis.ticks.y = ggplot2::element_blank())
+  
+  plot <- cowplot::plot_grid(glist[[1]],glist[[2]],ncol=1,align="v",rel_heights = rel_heights)
+  if(legend) plot <- cowplot::plot_grid(plot,glist[[3]],rel_widths = rel_widths)
+  
+  return(plot)
+}
+```
+
+
+## Miscellaneous options
+
+### Days in datasets
+In many cases, the first study day is recorded differently between AE dataset and PK dataset: the former record this as `DAY=1` and the latter record this as `DAY=0`. The parameter `ae.data.first.day` can correct such difference between datasets (currently this dose not cover AE records before the start of a study).  
+
+Note that the function currently ignores AE durations outside PK data range. For example, if AE resolution day is after the last PK data point, this is treated the same as the unresolved AE.  
+
+
+### Colors of AE duration curves
+A variable specified by the parameter `ae.col.var` controls colors of AE duration. The default is to choose `AE` column in the `ae` dataset:
+```{r, fig.height = 5, fig.width = 6, message=FALSE, warning=FALSE}
+glist <-
+  pkaeplot(pk  = pk.sim.profile,
+           ae  = ae.sim.profile,
+           subj= subject.sim,
+           ae.data.first.day = 1)
+combine_pkaeplot(glist)
+```
+
+`ae.col.var` can be either AE grades, AE types, or any other stratification variables contained in `ae` dataset. The first example in this vegniette uses `AEGR`, AE grade, as a stratification variable. Even if you only need one color for AE curves, you still have to specify a column ; you can (create and) specify a column that has only one factor.  
+
+Currently the functions does not support filtering of data, so you have to remove any AE data that you don't want to include in the outputs. For example, if you want to only show NAUSEA in the plot using the sample dataset:
+```{r, fig.height = 5, fig.width = 6, message=FALSE, warning=FALSE}
+glist <-
+  pkaeplot(pk  = pk.sim.profile,
+           ae  = ae.sim.profile %>% dplyr::filter(AE=="NAUSEA"),
+           subj= subject.sim,
+           ae.data.first.day = 1)
+combine_pkaeplot(glist)
+```
+
+
+
+### Control graph appearance
+You can control graph appearance, such as ggplot2 theme (`ggtheme`), Y-axis range (`ggtheme`), legend title (`ae.col.name`), or colors of AE curves (`ae.palette`):
+
+```{r, fig.height = 5, fig.width = 6, message=FALSE, warning=FALSE}
+theme.to.use <-
+  ggplot2::theme_bw()+
+  ggplot2::theme(text = ggplot2::element_text(size=20))
+
+pkaeplot(pk  = pk.sim.profile,
+         ae  = ae.sim.profile,
+         subj= subject.sim,
+         ae.data.first.day = 1,
+         y.range=c(3,300),
+         ae.col.var="AEGR",
+         ae.col.name="AE grade",
+         ae.palette=c("#56B4E9","#009E73","#D55E00"),
+         ggtheme=theme.to.use) %>% 
+  combine_pkaeplot(rel_widths=c(7,3))
+```
+
+You can also directly edit each component in the list object returned from `pkaeplot` function and then use the edited item list as an input to `combine_pkaeplot` function.
+
+## Dataset specifications
+
+The following three datasets are required for the plots:
+
+- `pk`- individual concentration-time profile dataset
+- `ae` - adverse event dataset containing start and end date
+- `subj` - dataset containing IDs and other individual factors for all subjects in the study
+
+
+### Dataset `pk`
+The required dataset format is generally consistent with NONMEM, i.e. ID, time, concentrations all recorded in each column for every event records. `pk` dataset requires the following column to be present:
+
+- `ID` - subject ID
+- `DAY`- days after the start of the study
+- `DV`- measured or simulated drug concentration
+
+You can use either observed profiles (with intensive PK samplings) or simulated profiles, such as IPRED, as drug concentrations. All the event records will be used for plotting. Therefore, non-measurement data, such as dosing records, should be excluded before using `pkaeplot` function.  
+
+Currently, PK profiles for all the subjects who do not have PK data will be imputed with constant values and plotted separetely from subjects who have PK data. If you have subjects who received drugs but do not have PK data (e.g. missing data), my recommendation is (1) to exclude subject IDs from `subj` dataset, (2) to impute with population prediction (i.e. `PRED`), or (3) to leave as it is (especially if dose was too low to reach measurable exposure).  
+
+The example dataset `pk.sim.profile` (included in this package):
+```{r, echo=FALSE, results='asis'}
+head(pk.sim.profile,5) %>% 
+  knitr::kable()
+```
+
+### Dataset `ae`
+The following columns are required in `ae` dataset:
+
+- `ID` - subject ID
+- `AE` - types of AE
+- `AESTDY`- AE start day
+- `AEEDDY` - AE end day
+
+Another column specifying AE characteristics (e.g. AE grade) can be included and specified with the parameter `ae.col.var` for coloring of curves. This column can be in any data format but `factor` format might be easy to control the color order.  
+
+The example dataset `ae.sim.profile` (included in this package):
+```{r, echo=FALSE, results='asis'}
+head(ae.sim.profile,5) %>% 
+  knitr::kable()
+```
+
+
+### Dataset `subj`
+The following column is required in `subj` dataset:
+
+- `ID` - subject ID
+
+The main purposes of  `subj` dataset are (1) to capture subjects who do not have PK nor AE data and (2) to include other study attributes (e.g. arm, dose)  
+
+The example dataset `subject.sim` (included in this package):
+```{r, echo=FALSE, results='asis'}
+head(subject.sim,5) %>% 
+  knitr::kable()
+```
+
