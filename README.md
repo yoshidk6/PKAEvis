@@ -2,10 +2,13 @@
 
 ## Installation
 
-    devtools::install_github("yoshidk6/PKAEvis")
-    library(PKAEvis)
+You can install this package from GitHub with:
 
+```R
+# install.packages("devtools")
+devtools::install_github("yoshidk6/PKAEvis")
+```
 
-## License
+## Usage
 
-[MIT license](http://opensource.org/licenses/MIT)
+See [Vignette](https://yoshidk6.github.io/PKAEvis/PKAEvis.html)
