@@ -5,13 +5,17 @@ library(tidyverse)
 if(0){
   # Settings for test of pkaeplot
 
+  load("data/ae.sim.profile.rda")
+  load("data/pk.sim.profile.sparse.rda")
+  load("data/subject.sim.rda")
+
   pk <- pk.sim.profile.sparse
   ae <- ae.sim.profile
   subj<-subject.sim
   ae.data.first.day <- 1
   scale.y.log10=T
-  x.range=NA
-  y.range=NA
+  x.range=NULL
+  y.range=NULL
   ae.col.var= "AEGR"
   ae.col.name=NULL
   ae.palette=c("#56B4E9","#0072B2","#D55E00")
