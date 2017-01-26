@@ -18,6 +18,7 @@
 #' @param ae.col.var variable to set colors of AE (e.g. AE grade, AE type)
 #' @param ae.col.name name appearing in legend for different colors of AE curves
 #' @param ae.palette color palette for AE scales
+#' @param pk.col.var variable to set colors of background PK curves (e.g. DOSE)
 #' @param ggtheme specify ggplot theme (set NULL to use current theme)
 #' @return list of ggplot objects
 #' @examples
@@ -32,6 +33,7 @@ pkaeplot <-function(pk, ae, subj,
                     x.range=NULL, y.range=NULL,
                     ae.col.var="AE",
                     ae.col.name=NULL,
+                    pk.col.var=NULL,
                     ae.palette=c("#56B4E9","#0072B2","#D55E00"),
                     ggtheme=NULL){
 
@@ -46,6 +48,7 @@ pkaeplot <-function(pk, ae, subj,
     select(ID,AE,ae.col,AESTDY,AEEDDY) %>%
     mutate(id.ae=1:nrow(.))
 
+  ae.col.lev <- levels(ae$ae.col)
 
   pk <- pk %>%
     select(ID,DAY,DV) %>%
@@ -73,6 +76,13 @@ pkaeplot <-function(pk, ae, subj,
 
   #### Combine PK and subject data ####
   pk <- full_join(pk,subj,by="ID")
+
+  #### Assign colors for AE if specified ####
+  if (is.null(pk.col.var)==F) {
+    pk <-
+      mutate_(pk,pk.col=pk.col.var) %>%
+      mutate(pk.col=as.factor(pk.col))
+  }
 
   #### Combine PK and AE data ####
 
@@ -147,24 +157,38 @@ pkaeplot <-function(pk, ae, subj,
   plot.pkae <-
     function(pk.plot,          # PK for all data points
              pk.ae.plot,       # PK for AE duration
-             pk.ae.plot.2,     # PK for AE duration in the other group (active vs placebo)
              pk.ae.st.ed.plot, # PK for AE start and end day
              x.range,
              y.range,
-             ae.palette, ae.col.var, ae.col.name){
+             ae.palette, ae.col.lev, # Set colors for AE curves
+             pk.col.var=NULL # Set colors for background PK curves
+             ){
 
-      g <-
-        ggplot(pk.ae.plot,aes_string("DAY", "DV", group="id.ae", color="ae.col")) +
-        # All PK curve
-        geom_line(data=pk.plot, aes(group=ID), color="black", alpha=0.3) +
-        # AE curve
-        geom_line(data=pk.ae.plot,  linetype="solid", size=1.2) +
-        geom_line(data=pk.ae.plot.2,linetype="solid", size=1.2) +
-        # AE start and end
-        geom_point(data=pk.ae.st.ed.plot, size=2) +
-        coord_cartesian(xlim = x.range, ylim = y.range)+
-        scale_colour_manual(values=ae.palette,name=ae.col.name) +
-        ggtheme + theme(legend.position="none")
+
+      # All PK curves
+      if (is.null(pk.col.var)){
+        g <-
+          ggplot(pk.plot,aes(DAY, DV, group=id.ae)) +
+          geom_line(aes(group=ID), color="grey50", alpha=0.4)
+      } else {
+        g <-
+          ggplot(pk.plot,aes(DAY, DV, group=id.ae)) +
+          geom_line(aes(group=ID, color=pk.col), alpha=0.4, show.legend = F)
+      }
+
+      # AE curves
+      for (k in seq_along(ae.col.lev)){
+        g <- g +
+          geom_line(data=pk.ae.plot %>% filter(ae.col==ae.col.lev[k]),
+                    linetype="solid", size=1.2, color = ae.palette[k]) +
+          geom_point(data=pk.ae.st.ed.plot %>% filter(ae.col==ae.col.lev[k]),
+                     size=2, color = ae.palette[k])
+      }
+
+      # Formatting
+      g <- g +
+        coord_cartesian(xlim = x.range, ylim = y.range) +
+        ggtheme #+ theme(legend.position="none")
 
       return(g)
     }
@@ -179,13 +203,11 @@ pkaeplot <-function(pk, ae, subj,
   #### Plot for subjects with PK ####
   g1 <-plot.pkae(pk.plot      = filter(pk,    no.pk==F),
                  pk.ae.plot   = filter(pk.ae, no.pk==F),
-                 pk.ae.plot.2 =
-                   filter(pk.ae, no.pk==T) %>%
-                   mutate(DAY=DAY+x.range[2]*2),
                  pk.ae.st.ed.plot = filter(pk.ae.st.ed,no.pk==F),
                  x.range,
                  y.range,
-                 ae.palette, ae.col.var, ae.col.name)
+                 ae.palette, ae.col.lev,
+                 pk.col.var)
 
   if(scale.y.log10) g1 <- g1+scale_y_log10()
 
@@ -194,13 +216,10 @@ pkaeplot <-function(pk, ae, subj,
 
   g2 <-plot.pkae(pk.plot      = filter(pk,    no.pk==T),
                  pk.ae.plot   = filter(pk.ae, no.pk==T),
-                 pk.ae.plot.2 =
-                   filter(pk.ae, no.pk==F) %>%
-                   mutate(DAY=DAY+x.range[2]*2),
                  pk.ae.st.ed.plot = filter(pk.ae.st.ed,no.pk==T),
                  x.range,
                  y.range = c(1,n.nopk),
-                 ae.palette, ae.col.var, ae.col.name)
+                 ae.palette, ae.col.lev)
 
 
   #### Plot for legend ####
@@ -215,6 +234,7 @@ pkaeplot <-function(pk, ae, subj,
   tmp <- ggplot_gtable(ggplot_build(g.for.legend))
   leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
   g3 <- tmp$grobs[[leg]]
+
 
   #### Return value ####
 

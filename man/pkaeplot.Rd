@@ -6,7 +6,8 @@
 \usage{
 pkaeplot(pk, ae, subj, ae.data.first.day = 0, scale.y.log10 = T,
   x.range = NULL, y.range = NULL, ae.col.var = "AE", ae.col.name = NULL,
-  ae.palette = c("#56B4E9", "#0072B2", "#D55E00"), ggtheme = NULL)
+  pk.col.var = NULL, ae.palette = c("#56B4E9", "#0072B2", "#D55E00"),
+  ggtheme = NULL)
 }
 \arguments{
 \item{pk}{dataset containing individual pharmacokinetic profiles}
@@ -25,6 +26,8 @@ DAY=1 in AE dataset and DAY=0 in PK dataset}
 \item{ae.col.var}{variable to set colors of AE (e.g. AE grade, AE type)}
 
 \item{ae.col.name}{name appearing in legend for different colors of AE curves}
+
+\item{pk.col.var}{variable to set colors of background PK curves (e.g. DOSE)}
 
 \item{ae.palette}{color palette for AE scales}
 

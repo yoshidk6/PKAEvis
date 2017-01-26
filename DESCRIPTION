@@ -1,7 +1,7 @@
 Package: PKAEvis
 Type: Package
 Title: Visualize longitudinal adverse event data with pharmacokinetic profiles
-Version: 0.1.1
+Version: 0.1.2
 Author: Kenta Yoshida
 Maintainer: Kenta Yoshida <yoshida.kenta@gene.com>
 Description: The PKAEvis package provide visualization tools to explore 

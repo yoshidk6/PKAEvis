@@ -131,9 +131,22 @@ combine_pkaeplot(glist)
 ```
 
 
+### Colors of background PK curves
+You can also change colors of background PK curved based on variables in either `pk` or `subj` datasets. You can specify the stratifying variable with `pk.col.var`. The example below shows coloring of the curves based on the dose given to each subject. Currently the function does not produce legends for these colors nor has an option to change color scales. 
+```{r, fig.height = 5, fig.width = 6, message=FALSE, warning=FALSE}
+glist <-
+  pkaeplot(pk  = pk.sim.profile,
+           ae  = ae.sim.profile,
+           subj= subject.sim,
+           pk.col.var="DOSE",
+           ae.data.first.day = 1)
+combine_pkaeplot(glist)
+```
+
+
 
 ### Control graph appearance
-You can control graph appearance, such as ggplot2 theme (`ggtheme`), Y-axis range (`ggtheme`), legend title (`ae.col.name`), or colors of AE curves (`ae.palette`):
+You can control graph appearance, such as ggplot2 theme (`ggtheme`), Y-axis range (`y.range`), legend title (`ae.col.name`), or colors of AE curves (`ae.palette`):
 
 ```{r, fig.height = 5, fig.width = 6, message=FALSE, warning=FALSE}
 theme.to.use <-
@@ -152,7 +165,7 @@ pkaeplot(pk  = pk.sim.profile,
   combine_pkaeplot(rel_widths=c(7,3))
 ```
 
-You can also directly edit each component in the list object returned from `pkaeplot` function and then use the edited item list as an input to `combine_pkaeplot` function.
+You can also directly edit each component in the list object returned from `pkaeplot` function and then use the edited list as an input to `combine_pkaeplot` function.
 
 ## Dataset specifications
 
